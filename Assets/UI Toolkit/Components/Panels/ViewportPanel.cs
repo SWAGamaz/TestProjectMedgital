@@ -1,0 +1,43 @@
+using System.Collections;
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UIElements;
+
+namespace UI
+{
+    public class ViewportPanel : PanelBase, IResizible
+    {
+        private CameraManipulator _cameraManipulator;
+        
+        protected Camera _viewCamera;
+        
+        public ViewportPanel()
+        {
+            _viewCamera = new GameObject("Camera").AddComponent<Camera>();
+            _viewCamera.clearFlags = CameraClearFlags.SolidColor;
+            _viewCamera.backgroundColor = new Color(0.1490196f, 0.145098f, 0.172549f);
+            _viewCamera.orthographicSize = 0.6f;
+            _viewCamera.cullingMask = (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 11);
+            _viewCamera.transform.localPosition = Vector3.forward;
+            _viewCamera.transform.LookAt(Vector3.zero);
+            
+            this.RegisterCallback<GeometryChangedEvent>(ResizeCamera);
+            
+            _cameraManipulator = new CameraManipulator(_viewCamera);
+            this.AddManipulator(_cameraManipulator);
+        }
+
+        private void ResizeCamera(GeometryChangedEvent evt)
+        {
+            Rect newRect = this.worldBound;
+            float normalizedX = newRect.x / Screen.width;
+            float normalizedY = (Screen.height - newRect.y - newRect.height) / Screen.height;
+            float normalizedWidth = newRect.width / Screen.width;
+            float normalizedHeight = newRect.height / Screen.height;
+
+            _viewCamera.rect = new Rect(normalizedX, normalizedY, normalizedWidth, normalizedHeight);
+        }
+    }
+}
+

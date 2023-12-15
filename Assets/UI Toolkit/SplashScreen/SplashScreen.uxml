@@ -1,0 +1,5 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd">
+    <ui:VisualElement style="flex-grow: 1; background-color: rgb(33, 32, 39);">
+        <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); background-image: url(&apos;project://database/Assets/UI%20Toolkit/SplashScreen/logoNew.png?fileID=2800000&amp;guid=904a8ae9f2e44db458db88af98c08658&amp;type=3#logoNew&apos;); -unity-background-scale-mode: scale-to-fit; margin-left: 20%; margin-right: 20%; opacity: 1;" />
+    </ui:VisualElement>
+</ui:UXML>
