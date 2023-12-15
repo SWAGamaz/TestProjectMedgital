@@ -50,9 +50,7 @@ public class CameraControl : MonoBehaviour
     private void Update()
     {
         if (_controlledCamera == null) return;
-        
-        Debug.Log(_controlledCamera.name);
-        
+
         if (_controlledCamera.orthographic)
         {
             // Ортогональная камера
