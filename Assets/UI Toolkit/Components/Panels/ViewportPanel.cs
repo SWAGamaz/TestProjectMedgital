@@ -8,6 +8,9 @@ namespace UI
 {
     public class ViewportPanel : PanelBase, IResizible
     {
+        public static Camera FocusedCamera => _focusedCamera;
+        private static Camera _focusedCamera;
+        
         private CameraManipulator _cameraManipulator;
         
         protected Camera _viewCamera;
@@ -37,6 +40,20 @@ namespace UI
             float normalizedHeight = newRect.height / Screen.height;
 
             _viewCamera.rect = new Rect(normalizedX, normalizedY, normalizedWidth, normalizedHeight);
+        }
+        
+        protected override void SetFocused()
+        {
+            base.SetFocused();
+
+            _focusedCamera = _viewCamera;
+        }
+
+        protected override void SetUnfocused()
+        {
+            base.SetUnfocused();
+
+            _focusedCamera = null;
         }
     }
 }

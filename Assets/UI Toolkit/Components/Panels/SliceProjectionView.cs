@@ -105,18 +105,4 @@ public class SliceProjectionView : ViewportPanel
         // Направление камеры на центр среза
         _viewCamera.transform.LookAt(slice.position);
     }
-
-    protected override void SetFocused()
-    {
-        base.SetFocused();
-        
-        
-    }
-
-    protected override void SetUnfocused()
-    {
-        base.SetUnfocused();
-        
-        
-    }
 }
