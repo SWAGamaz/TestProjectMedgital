@@ -10,7 +10,7 @@ namespace UI
             // Пример кнопки загрузки Volume
             Button loadDicomBtn = new Button(() =>
             {
-                Debug.Log("Нажато");
+                VolumeLoader.LoadVolume();
             });
             loadDicomBtn.text = "Загрузить DICOM";
             this.Add(loadDicomBtn);
