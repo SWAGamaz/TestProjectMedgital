@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
-public class WindowManager : MonoBehaviour
+public class SplashScreenResizer : MonoBehaviour
 {
     public static IntPtr SavedHwnd;
 

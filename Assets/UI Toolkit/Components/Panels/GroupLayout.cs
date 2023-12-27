@@ -2,7 +2,7 @@ using UnityEngine.UIElements;
 
 namespace UI
 {
-    public class GroupLayout : VisualElement, IGroup
+    public class GroupLayout : VisualElement, IGroup, IResizible
     {
         #region Properties
     

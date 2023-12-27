@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -15,13 +14,14 @@ namespace UI
         #endregion
         
         #region Private fields
-
+        
         private List<Splitter> _splittersList;
         private List<VisualElement> _resizibleList = new List<VisualElement>();
         private List<VisualElement> _listPre = new List<VisualElement>();
         private List<VisualElement> _listPost = new List<VisualElement>();
         private Splitter _draggingSplitter;
-
+        private Inspector _inspector;
+        
         #endregion
 
         public Workspace()
@@ -37,6 +37,8 @@ namespace UI
             GroupLayout vertical2 = new GroupLayout(FlexDirection.Column);
             ViewportPanel perspective = new PerspectiveView();
             ViewportPanel sagittal = SliceProjectionViewManager.CreateView(SliceProjectionAxis.Sagittal);
+            
+            _inspector = new Inspector();
 
             if (axial == null || coronal == null || sagittal == null)
             {
@@ -47,12 +49,10 @@ namespace UI
             vertical1.Add(coronal);
             vertical2.Add(perspective);
             vertical2.Add(sagittal);
-            
-            Inspector inspector = new Inspector();
-            
+
             this.Add(vertical1);
             this.Add(vertical2);
-            this.Add(inspector);
+            this.Add(_inspector);
             
             // Определяем все элементы IResizible
 
@@ -63,30 +63,32 @@ namespace UI
                     _resizibleList.Add(elem);
                 }
             }
-            
+
             // Заполняем сплиттерами
             _splittersList = new List<Splitter>();
             BuildSplitters(this);
-
-            // Обнавляем положения после перерасчета геометрии
-            // Например в случае изменении размера приложения
-            this.RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
-        }
-
-        private void OnGeometryChanged(GeometryChangedEvent evt)
-        {
-            foreach (var elem in _resizibleList)
-            {
-                elem.style.width = elem.worldBound.width;
-                elem.style.height = elem.worldBound.height;
-            }
             
-            foreach (var splitter in _splittersList)
+            this.RegisterCallback<GeometryChangedEvent>(WorkspaceChangeSize);
+        }
+        
+        private void WorkspaceChangeSize(GeometryChangedEvent evt)
+        {
+            foreach (var element in _resizibleList)
             {
-                splitter.ResetAnchor();
+                if (element.parent is GroupLayout layout)
+                {
+                    element.style.flexBasis = 
+                        layout.Direction == FlexDirection.Column || layout.Direction == FlexDirection.ColumnReverse 
+                        ? element.resolvedStyle.height 
+                        : element.resolvedStyle.width;
+                }
+                else if(element.parent == this)
+                {
+                    element.style.flexBasis = element.resolvedStyle.width;
+                }
             }
         }
-
+        
         private void BuildSplitters(VisualElement parent)
         {
             // Получите общее количество дочерних элементов
@@ -145,18 +147,10 @@ namespace UI
             
             _listPre.Clear();
             _listPost.Clear();
-            
-            if (splitter.Direction == SplitterDirection.Vertical)
-            {
-                GetAllVerticalLastResizibleElements(leftElement);
-                GetAllVerticalFirstResizibleElements(rightElement);
-            }
-            else
-            {
-                GetAllHorizontalDepthResizibleElements(leftElement);
-                GetAllHorizontalSurfaceResizibleElements(rightElement);
-            }
 
+            _listPre.Add(leftElement);
+            _listPost.Add(rightElement);
+            
             splitter.OnDragUpdateHandler += OnDragUpdate;
             splitter.OnDragEndHandler += OnDragEnd;
         }
@@ -216,18 +210,20 @@ namespace UI
         {
             foreach (var element in elements)
             {
-                var eRect = element.worldBound;
-                if (isVertical)
+                float minSize = isVertical ? element.style.minWidth.value.value : element.style.minHeight.value.value;
+                float newSize = element.resolvedStyle.flexBasis.value + delta;
+                if (newSize < minSize)
                 {
-                    element.style.width = Mathf.Max(element.resolvedStyle.minWidth.value, eRect.width + delta);
+                    element.style.flexShrink = 0;
+                    element.style.flexBasis = minSize;
                 }
                 else
                 {
-                    element.style.height = Mathf.Max(element.resolvedStyle.minHeight.value, eRect.height + delta);
+                    if (element.style.flexShrink != 1 && element != _inspector) element.style.flexShrink = 1;
+                    element.style.flexBasis = element.resolvedStyle.flexBasis.value + delta;
                 }
             }
         }
-
 
         private void OnDragEnd(Splitter splitter)
         {
@@ -241,96 +237,6 @@ namespace UI
             foreach (var s in _splittersList)
             {
                 s.ResetAnchor();
-            }
-        }
-        
-        // Получаем все элементы первого уровня в горизонтальной линии
-        // То есть все элементы находящиеся Сверху
-        private void GetAllHorizontalSurfaceResizibleElements(VisualElement parent)
-        {
-            if (parent is IResizible) _listPost.Add(parent);
-            else if (parent is GroupLayout layout)
-            {
-                if (parent.childCount <= 0) return;
-                if (layout.Direction == FlexDirection.Column || layout.Direction == FlexDirection.ColumnReverse)
-                {
-                    GetAllHorizontalSurfaceResizibleElements(parent[0]);
-                }
-                else
-                {
-                    foreach (var child in parent.Children())
-                    {
-                        GetAllHorizontalSurfaceResizibleElements(child);
-                    }
-
-                }
-            }
-        }
-        
-        // Получаем все элементы последнего уровня в горизонтальной линии
-        // То есть все элементы находящиеся Снизу
-        private void GetAllHorizontalDepthResizibleElements(VisualElement parent)
-        {
-            if (parent is IResizible) _listPre.Add(parent);
-            else if (parent is GroupLayout layout)
-            {
-                if (parent.childCount <= 0) return;
-                if (layout.Direction == FlexDirection.Column || layout.Direction == FlexDirection.ColumnReverse)
-                {
-                    GetAllHorizontalDepthResizibleElements(parent[parent.childCount - 1]);
-                }
-                else
-                {
-                    foreach (var child in parent.Children())
-                    {
-                        GetAllHorizontalDepthResizibleElements(child);
-                    }
-
-                }
-            }
-        }
-        
-        // Получаем все первые элементы относительно вертикальной линни
-        // То есть все элементы находящиеся Слева
-        private void GetAllVerticalFirstResizibleElements(VisualElement parent)
-        {
-            if (parent is IResizible) _listPost.Add(parent);
-            else if (parent is GroupLayout layout)
-            {
-                if (parent.childCount <= 0) return;
-                if (layout.Direction == FlexDirection.Column || layout.Direction == FlexDirection.ColumnReverse)
-                {
-                    foreach (var child in parent.Children())
-                    {
-                        GetAllVerticalFirstResizibleElements(child);
-                    }
-                }
-                else
-                {
-                    GetAllVerticalFirstResizibleElements(parent[0]);
-                }
-            }
-        }
-        
-        // Получаем все последние элементы относительно вертикальной линни
-        // То есть все элементы находящиеся Справа
-        private void GetAllVerticalLastResizibleElements(VisualElement parent)
-        {
-            if (parent is IResizible) _listPre.Add(parent);
-            else if (parent is GroupLayout layout)
-            {
-                if (parent.childCount <= 0) return;
-                if (layout.Direction == FlexDirection.Column || layout.Direction == FlexDirection.ColumnReverse)
-                {
-                    foreach (var child in parent.Children())
-                    {
-                        GetAllVerticalLastResizibleElements(child);
-                    }
-                }
-                else
-                {
-                    GetAllVerticalLastResizibleElements(parent[parent.childCount - 1]);
-                }
             }
         }
     }

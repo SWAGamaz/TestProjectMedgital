@@ -28,9 +28,15 @@ namespace UI
             _manipulator.OnDragUpdateHandler += OnDragUpdateSplitter;
             this.AddManipulator(_manipulator);
             
+            target.RegisterCallback<GeometryChangedEvent>(OnSplitterChanged);
             ResetAnchor();
         }
-        
+
+        private void OnSplitterChanged(GeometryChangedEvent evt)
+        {
+            ResetAnchor();
+        }
+
         private void OnDragUpdateSplitter(Vector2 position)
         {
             if (_target.Direction == SplitterDirection.Vertical)

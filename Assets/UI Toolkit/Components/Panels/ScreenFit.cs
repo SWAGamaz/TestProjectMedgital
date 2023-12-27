@@ -18,7 +18,7 @@ public class ScreenFit : MonoBehaviour
     void Awake()
     {
 #if !UNITY_EDITOR
-        IntPtr hwnd = WindowManager.SavedHwnd;
+        IntPtr hwnd = SplashScreenResizer.SavedHwnd;
 
         // Установить стили окна для отображения элементов управления и делаем окно видимым
         SetWindowLong(hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
