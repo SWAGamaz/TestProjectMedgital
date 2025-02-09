@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -8,6 +9,10 @@ namespace UI
 {
     public class ViewportPanel : PanelBase, IResizible
     {
+        public static Action<ViewportPanel, Vector2> OnClick;
+
+        public Camera ViewCamera => _viewCamera;
+        
         public static Camera FocusedCamera => _focusedCamera;
         private static Camera _focusedCamera;
         
@@ -29,6 +34,8 @@ namespace UI
             
             _cameraManipulator = new CameraManipulator(_viewCamera);
             this.AddManipulator(_cameraManipulator);
+            
+            this.RegisterCallback<ClickEvent>(OnClickViewport);
         }
 
         private void ResizeCamera(GeometryChangedEvent evt)
@@ -40,6 +47,18 @@ namespace UI
             float normalizedHeight = newRect.height / Screen.height;
 
             _viewCamera.rect = new Rect(normalizedX, normalizedY, normalizedWidth, normalizedHeight);
+        }
+        
+        private void OnClickViewport(ClickEvent evt)
+        {
+            // Получаем размеры окна или UI элемента
+            var panelWidth = this.resolvedStyle.width;
+            var panelHeight = this.resolvedStyle.height;
+
+            // Преобразуем координаты клика в нормализованные значения
+            OnClick?.Invoke(this, new Vector2(
+                evt.localPosition.x / panelWidth,
+                1 - evt.localPosition.y / panelHeight));
         }
         
         protected override void SetFocused()
